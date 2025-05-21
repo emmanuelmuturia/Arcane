@@ -28,9 +28,16 @@ kotlin {
     }
 
     sourceSets {
+        androidMain.dependencies {
+            implementation(dependencyNotation = libs.koin.android)
+            implementation(dependencyNotation = libs.koin.androidx.compose)
+        }
         commonMain.dependencies {
             //put your multiplatform dependencies here
             implementation(dependencyNotation = libs.timber)
+            api(dependencyNotation = libs.koin.core)
+            implementation(dependencyNotation = libs.koin.compose)
+            implementation(dependencyNotation = libs.koin.compose.viewmodel)
         }
         commonTest.dependencies {
             implementation(dependencyNotation = libs.kotlin.test)
