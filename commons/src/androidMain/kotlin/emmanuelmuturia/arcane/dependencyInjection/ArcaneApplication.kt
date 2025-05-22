@@ -16,6 +16,7 @@
 package emmanuelmuturia.arcane.dependencyInjection
 
 import android.app.Application
+import emmanuelmuturia.arcane.commons.dependencyInjection.initKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.component.KoinComponent
 

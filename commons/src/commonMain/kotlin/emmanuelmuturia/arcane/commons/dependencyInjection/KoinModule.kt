@@ -13,7 +13,7 @@
  * See the Licence for the specific language governing permissions and
  * limitations under the Licence.
  */
-package emmanuelmuturia.arcane.dependencyInjection
+package emmanuelmuturia.arcane.commons.dependencyInjection
 
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
