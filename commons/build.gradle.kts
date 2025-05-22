@@ -50,9 +50,12 @@ kotlin {
         commonMain.dependencies {
             // put your multiplatform dependencies here
             implementation(dependencyNotation = libs.timber)
+
             api(dependencyNotation = libs.koin.core)
             implementation(dependencyNotation = libs.koin.compose)
             implementation(dependencyNotation = libs.koin.compose.viewmodel)
+
+            implementation(dependencyNotation = libs.lifecycle.viewmodel)
         }
         commonTest.dependencies {
             implementation(dependencyNotation = libs.kotlin.test)
