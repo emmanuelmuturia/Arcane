@@ -1,5 +1,6 @@
 provider "aws" {
   region = var.region
+  profile = var.profile
 }
 
 resource "aws_vpc" "arcane_vpc" {

@@ -12,3 +12,8 @@ variable "key_name" {
   description = "The name of The SSH Key Pair..."
   default     = "arcane-key"
 }
+
+variable "profile" {
+  description = "The AWS Profile..."
+  default     = "emmanuelmuturia"
+}
