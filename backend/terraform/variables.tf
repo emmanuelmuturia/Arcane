@@ -17,3 +17,8 @@ variable "profile" {
   description = "The AWS Profile..."
   default     = "emmanuelmuturia"
 }
+
+variable "alert_email" {
+  description = "The Destination Email Address for the AWS CloudWatch Alarm..."
+  default = "emmanuelmuturia@duck.com"
+}

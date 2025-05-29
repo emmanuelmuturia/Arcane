@@ -108,6 +108,12 @@ resource "aws_lambda_function" "arcane_lambda" {
   source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
 
   depends_on = [aws_iam_policy_attachment.lambda_basic_exec]
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN = aws_sns_topic.arcane_alerts.arn
+    }
+  }
 }
 
 resource "aws_apigatewayv2_api" "arcane_api" {
@@ -158,6 +164,13 @@ resource "aws_iam_policy" "ec2_reboot_policy" {
         ],
         Effect   = "Allow",
         Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "sns:Publish"
+        ],
+        Resource = aws_sns_topic.arcane_alerts.arn
       }
     ]
   })
@@ -167,4 +180,19 @@ resource "aws_iam_policy_attachment" "attach_ec2_reboot_policy" {
   name       = "arcane-attach-ec2-policy"
   roles      = [aws_iam_role.lambda_exec_role.name]
   policy_arn = aws_iam_policy.ec2_reboot_policy.arn
+}
+
+resource "aws_sns_topic" "arcane_alerts" {
+  name = "arcane-self-heal-alerts"
+}
+
+resource "aws_sns_topic_subscription" "arcane_email_alert" {
+  topic_arn = aws_sns_topic.arcane_alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+}
+
+resource "aws_cloudwatch_log_group" "arcane_lambda_logs" {
+  name              = "/aws/lambda/${aws_lambda_function.arcane_lambda.function_name}"
+  retention_in_days = 14
 }
