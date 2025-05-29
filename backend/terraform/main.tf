@@ -76,3 +76,66 @@ resource "aws_instance" "arcane_ec2" {
     Name = "arcane-instance"
   }
 }
+
+resource "aws_iam_role" "lambda_exec_role" {
+  name = "arcane-lambda-exec-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_policy_attachment" "lambda_basic_exec" {
+  name       = "arcane-lambda-basic-exec"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_lambda_function" "arcane_lambda" {
+  filename         = "lambda_function.zip"
+  function_name    = "arcane-self-heal"
+  role             = aws_iam_role.lambda_exec_role.arn
+  handler          = "lambda_function.lambda_handler"
+  runtime          = "python3.9"
+  source_code_hash = filebase64sha256("lambda_function.zip")
+}
+
+resource "aws_apigatewayv2_api" "arcane_api" {
+  name          = "arcane-api"
+  protocol_type = "HTTP"
+}
+
+resource "aws_apigatewayv2_integration" "arcane_integration" {
+  api_id             = aws_apigatewayv2_api.arcane_api.id
+  integration_type   = "AWS_PROXY"
+  integration_uri    = aws_lambda_function.arcane_lambda.invoke_arn
+  integration_method = "POST"
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "arcane_route" {
+  api_id    = aws_apigatewayv2_api.arcane_api.id
+  route_key = "POST /heal"
+  target    = "integrations/${aws_apigatewayv2_integration.arcane_integration.id}"
+}
+
+resource "aws_apigatewayv2_stage" "arcane_stage" {
+  api_id      = aws_apigatewayv2_api.arcane_api.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+resource "aws_lambda_permission" "allow_api_invoke" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.arcane_lambda.arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.arcane_api.execution_arn}/*/*"
+}
