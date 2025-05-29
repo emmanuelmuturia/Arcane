@@ -142,3 +142,29 @@ resource "aws_lambda_permission" "allow_api_invoke" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.arcane_api.execution_arn}/*/*"
 }
+
+resource "aws_iam_policy" "ec2_reboot_policy" {
+  name = "arcane-ec2-reboot-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:StartInstances",
+          "ec2:StopInstances",
+          "ec2:RebootInstances"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy_attachment" "attach_ec2_reboot_policy" {
+  name       = "arcane-attach-ec2-policy"
+  roles      = [aws_iam_role.lambda_exec_role.name]
+  policy_arn = aws_iam_policy.ec2_reboot_policy.arn
+}
