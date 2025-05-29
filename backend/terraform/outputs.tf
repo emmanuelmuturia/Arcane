@@ -7,3 +7,7 @@ output "instance_id" {
   description = "The ID of the EC2 Instance..."
   value       = aws_instance.arcane_ec2.id
 }
+
+output "api_gateway_url" {
+  value = aws_apigatewayv2_api.arcane_api.api_endpoint
+}

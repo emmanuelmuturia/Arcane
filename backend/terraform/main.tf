@@ -99,12 +99,15 @@ resource "aws_iam_policy_attachment" "lambda_basic_exec" {
 }
 
 resource "aws_lambda_function" "arcane_lambda" {
-  filename         = "lambda_function.zip"
-  function_name    = "arcane-self-heal"
-  role             = aws_iam_role.lambda_exec_role.arn
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.9"
-  source_code_hash = filebase64sha256("lambda_function.zip")
+  function_name = "arcane-self-heal"
+  role          = aws_iam_role.lambda_exec_role.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.12"
+
+  filename         = "${path.module}/backend/lambda/lambda_function.zip"
+  source_code_hash = filebase64sha256("${path.module}/backend/lambda/lambda_function.zip")
+
+  depends_on = [aws_iam_policy_attachment.lambda_basic_exec]
 }
 
 resource "aws_apigatewayv2_api" "arcane_api" {
