@@ -104,8 +104,8 @@ resource "aws_lambda_function" "arcane_lambda" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.12"
 
-  filename         = "${path.module}/backend/lambda/lambda_function.zip"
-  source_code_hash = filebase64sha256("${path.module}/backend/lambda/lambda_function.zip")
+  filename         = "${path.module}/lambda_function.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
 
   depends_on = [aws_iam_policy_attachment.lambda_basic_exec]
 }
