@@ -9,7 +9,8 @@ output "instance_id" {
 }
 
 output "api_gateway_url" {
-  value = aws_api_gateway_rest_api.arcane_api.id
+  description = "The full Invoke URL of the REST API..."
+  value = "https://${aws_api_gateway_rest_api.arcane_api.id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.arcane_deployment.stage_name}/heal"
 }
 
 output "sns_topic_arn" {
