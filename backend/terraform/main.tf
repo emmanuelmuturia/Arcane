@@ -116,38 +116,48 @@ resource "aws_lambda_function" "arcane_lambda" {
   }
 }
 
-resource "aws_apigatewayv2_api" "arcane_api" {
-  name          = "arcane-api"
-  protocol_type = "HTTP"
+resource "aws_api_gateway_rest_api" "arcane_api" {
+  name        = "arcane-api"
+  description = "The Arcane REST API..."
 }
 
-resource "aws_apigatewayv2_integration" "arcane_integration" {
-  api_id             = aws_apigatewayv2_api.arcane_api.id
-  integration_type   = "AWS_PROXY"
-  integration_uri    = aws_lambda_function.arcane_lambda.invoke_arn
-  integration_method = "POST"
-  payload_format_version = "2.0"
+resource "aws_api_gateway_resource" "arcane_resource" {
+  rest_api_id = aws_api_gateway_rest_api.arcane_api.id
+  parent_id   = aws_api_gateway_rest_api.arcane_api.root_resource_id
+  path_part   = "heal"
 }
 
-resource "aws_apigatewayv2_route" "arcane_route" {
-  api_id    = aws_apigatewayv2_api.arcane_api.id
-  route_key = "POST /heal"
-  target    = "integrations/${aws_apigatewayv2_integration.arcane_integration.id}"
+resource "aws_api_gateway_method" "arcane_post_method" {
+  rest_api_id   = aws_api_gateway_rest_api.arcane_api.id
+  resource_id   = aws_api_gateway_resource.arcane_resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+  api_key_required = true
 }
 
-resource "aws_apigatewayv2_stage" "arcane_stage" {
-  api_id      = aws_apigatewayv2_api.arcane_api.id
-  name        = "$default"
-  auto_deploy = true
+resource "aws_api_gateway_integration" "arcane_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.arcane_api.id
+  resource_id = aws_api_gateway_resource.arcane_resource.id
+  http_method = aws_api_gateway_method.arcane_post_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.arcane_lambda.invoke_arn
+}
+
+resource "aws_api_gateway_deployment" "arcane_deployment" {
+  depends_on = [aws_api_gateway_integration.arcane_lambda_integration]
+  rest_api_id = aws_api_gateway_rest_api.arcane_api.id
+  stage_name  = "prod"
 }
 
 resource "aws_lambda_permission" "allow_api_invoke" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.arcane_lambda.arn
+  function_name = aws_lambda_function.arcane_lambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.arcane_api.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.arcane_api.execution_arn}/*/*"
 }
+
 
 resource "aws_iam_policy" "ec2_reboot_policy" {
   name = "arcane-ec2-reboot-policy"
@@ -211,4 +221,35 @@ resource "aws_cloudwatch_metric_alarm" "ec2_health_check" {
   dimensions = {
     InstanceId = aws_instance.arcane_ec2.id
   }
+}
+
+resource "aws_api_gateway_api_key" "arcane_api_key" {
+  name        = "arcane-api-key"
+  description = "API key for accessing Arcane API"
+  enabled     = true
+}
+
+resource "aws_api_gateway_usage_plan" "arcane_usage_plan" {
+  name = "arcane-usage-plan"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.arcane_api.id
+    stage  = aws_api_gateway_deployment.arcane_deployment.stage_name
+  }
+
+  throttle_settings {
+    rate_limit  = 10
+    burst_limit = 2
+  }
+
+  quota_settings {
+    limit  = 100
+    period = "DAY"
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "arcane_usage_plan_key" {
+  key_id        = aws_api_gateway_api_key.arcane_api_key.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.arcane_usage_plan.id
 }

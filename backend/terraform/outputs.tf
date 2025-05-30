@@ -9,7 +9,7 @@ output "instance_id" {
 }
 
 output "api_gateway_url" {
-  value = aws_apigatewayv2_api.arcane_api.api_endpoint
+  value = aws_api_gateway_rest_api.arcane_api.id
 }
 
 output "sns_topic_arn" {
