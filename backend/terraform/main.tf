@@ -196,3 +196,19 @@ resource "aws_cloudwatch_log_group" "arcane_lambda_logs" {
   name              = "/aws/lambda/${aws_lambda_function.arcane_lambda.function_name}"
   retention_in_days = 14
 }
+
+resource "aws_cloudwatch_metric_alarm" "ec2_health_check" {
+  alarm_name          = "arcane-ec2-status-check"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "StatusCheckFailed"
+  namespace           = "AWS/EC2"
+  period              = "60"
+  statistic           = "Maximum"
+  threshold           = "0"
+  alarm_description   = "Triggers if EC2 Status Check fails..."
+  alarm_actions       = [aws_lambda_function.arcane_lambda.arn]
+  dimensions = {
+    InstanceId = aws_instance.arcane_ec2.id
+  }
+}
