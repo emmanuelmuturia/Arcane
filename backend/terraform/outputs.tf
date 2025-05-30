@@ -11,3 +11,13 @@ output "instance_id" {
 output "api_gateway_url" {
   value = aws_apigatewayv2_api.arcane_api.api_endpoint
 }
+
+output "sns_topic_arn" {
+  description = "The ARN of the SNS Topic..."
+  value = aws_sns_topic.arcane_alerts.arn
+}
+
+output "lambda_function_name" {
+  description = "The name of the Lambda Function..."
+  value = aws_lambda_function.arcane_lambda.function_name
+}
