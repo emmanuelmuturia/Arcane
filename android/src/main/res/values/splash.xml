@@ -15,5 +15,15 @@
      limitations under the Licence.
 -->
 <resources>
-    <style name="ArcaneTheme" parent="android:Theme.Material.NoActionBar"/>
+
+    <style name="Theme.Arcane.Splash" parent="Theme.SplashScreen">
+
+        <item name="windowSplashScreenBackground">#FF131315</item>
+
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo</item>
+
+        <item name="postSplashScreenTheme">@style/ArcaneTheme</item>
+
+    </style>
+
 </resources>
