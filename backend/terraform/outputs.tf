@@ -8,9 +8,14 @@ output "instance_id" {
   value       = aws_instance.arcane_ec2.id
 }
 
-output "api_gateway_url" {
-  description = "The full Invoke URL of the REST API..."
+output "post_api_gateway_url" {
+  description = "The full Invoke URL of the REST API [POST]..."
   value = "https://${aws_api_gateway_rest_api.arcane_api.id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.arcane_deployment.stage_name}/heal"
+}
+
+output "get_api_gateway_url" {
+  description = "The full Invoke URL of the REST API [GET]..."
+  value = "https://${aws_api_gateway_rest_api.arcane_api.id}.execute-api.${var.region}.amazonaws.com/${aws_api_gateway_deployment.arcane_deployment.stage_name}/status"
 }
 
 output "sns_topic_arn" {

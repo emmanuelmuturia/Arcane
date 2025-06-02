@@ -145,7 +145,10 @@ resource "aws_api_gateway_integration" "arcane_lambda_integration" {
 }
 
 resource "aws_api_gateway_deployment" "arcane_deployment" {
-  depends_on = [aws_api_gateway_integration.arcane_lambda_integration]
+  depends_on = [
+    aws_api_gateway_integration.arcane_lambda_integration,
+    aws_api_gateway_integration.arcane_get_lambda_integration
+  ]
   rest_api_id = aws_api_gateway_rest_api.arcane_api.id
   stage_name  = "prod"
 }
@@ -252,4 +255,66 @@ resource "aws_api_gateway_usage_plan_key" "arcane_usage_plan_key" {
   key_id        = aws_api_gateway_api_key.arcane_api_key.id
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.arcane_usage_plan.id
+}
+
+resource "aws_lambda_function" "arcane_get_lambda" {
+  function_name = "arcane-get-endpoint"
+  role          = aws_iam_role.lambda_exec_role.arn
+  handler       = "lambda_get_function.lambda_handler"
+  runtime       = "python3.12"
+
+  filename         = "${path.module}/lambda_get_function.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_get_function.zip")
+
+  depends_on = [aws_iam_policy_attachment.lambda_basic_exec]
+}
+
+resource "aws_api_gateway_resource" "arcane_get_resource" {
+  rest_api_id = aws_api_gateway_rest_api.arcane_api.id
+  parent_id   = aws_api_gateway_rest_api.arcane_api.root_resource_id
+  path_part   = "status"
+}
+
+resource "aws_api_gateway_method" "arcane_get_method" {
+  rest_api_id   = aws_api_gateway_rest_api.arcane_api.id
+  resource_id   = aws_api_gateway_resource.arcane_get_resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+  api_key_required = true
+}
+
+resource "aws_api_gateway_integration" "arcane_get_lambda_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.arcane_api.id
+  resource_id             = aws_api_gateway_resource.arcane_get_resource.id
+  http_method             = aws_api_gateway_method.arcane_get_method.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.arcane_get_lambda.invoke_arn
+}
+
+resource "aws_lambda_permission" "allow_api_invoke_get" {
+  statement_id  = "AllowExecutionFromAPIGatewayGet"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.arcane_get_lambda.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.arcane_api.execution_arn}/*/*"
+}
+
+resource "aws_iam_role_policy" "lambda_ec2_metrics_policy" {
+  name = "lambda-ec2-metrics-policy"
+  role = aws_iam_role.lambda_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "ec2:DescribeInstances",
+          "cloudwatch:GetMetricStatistics"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+      }
+    ]
+  })
 }
