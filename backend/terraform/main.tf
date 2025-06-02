@@ -299,3 +299,22 @@ resource "aws_lambda_permission" "allow_api_invoke_get" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.arcane_api.execution_arn}/*/*"
 }
+
+resource "aws_iam_role_policy" "lambda_ec2_metrics_policy" {
+  name = "lambda-ec2-metrics-policy"
+  role = aws_iam_role.lambda_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "ec2:DescribeInstances",
+          "cloudwatch:GetMetricStatistics"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+      }
+    ]
+  })
+}
