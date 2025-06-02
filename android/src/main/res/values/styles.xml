@@ -15,5 +15,5 @@
      limitations under the Licence.
 -->
 <resources>
-    <style name="AppTheme" parent="android:Theme.Material.NoActionBar"/>
+    <style name="ArcaneTheme" parent="android:Theme.Material.NoActionBar"/>
 </resources>
