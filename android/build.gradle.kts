@@ -66,5 +66,7 @@ dependencies {
 
     implementation(dependencyNotation = libs.google.fonts)
 
+    implementation(dependencyNotation = libs.android.splash.screen)
+
     debugImplementation(dependencyNotation = libs.compose.ui.tooling)
 }
